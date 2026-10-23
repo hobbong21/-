@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>산림경영지도원 모의고사</title>
+<style>
+:root {
+  --bg: #f6f7f4; --surface: #ffffff; --surface-2: #eef1ec; --text: #1d2420; --muted: #5d6a62;
+  --line: #d8ded8; --accent: #2f6b45; --accent-soft: #e2efe6; --good: #2f7a4a; --good-soft: #e3f3e8;
+  --bad: #b23b3b; --bad-soft: #f8e5e3; --warn: #9a6a12; --warn-soft: #f7eed9;
+  --radius: 10px; --shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --surface: #1c221f; --surface-2: #232b27; --text: #e6ebe7; --muted: #9aa69f;
+    --line: #333d38; --accent: #7cc49a; --accent-soft: #233a2d; --good: #7cc49a; --good-soft: #1f3528;
+    --bad: #e58a84; --bad-soft: #3a2422; --warn: #e2b95c; --warn-soft: #3a3020;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --surface: #1c221f; --surface-2: #232b27; --text: #e6ebe7; --muted: #9aa69f;
+  --line: #333d38; --accent: #7cc49a; --accent-soft: #233a2d; --good: #7cc49a; --good-soft: #1f3528;
+  --bad: #e58a84; --bad-soft: #3a2422; --warn: #e2b95c; --warn-soft: #3a3020;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 80px; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.sub { color: var(--muted); margin: 0 0 24px; font-size: .95rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+label.chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; background: var(--surface); font-size: .92rem; }
+label.chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+label.chip input { accent-color: var(--accent); margin: 0; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); padding: 8px 16px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.muted { color: var(--muted); font-size: .9rem; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line);
+  padding: 10px 0; margin-bottom: 16px; }
+.topbar .inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.1rem; }
+.timer.low { color: var(--bad); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tabs button { padding: 6px 12px; font-size: .9rem; }
+.tabs button.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.q { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.q:last-child { border-bottom: 0; }
+.q .stem { font-weight: 600; margin-bottom: 10px; white-space: pre-line; }
+.q .tag { font-size: .78rem; color: var(--muted); margin-left: 6px; font-weight: 400; }
+.opt { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface); }
+.opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+.opt.right { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.explain { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); font-size: .93rem; }
+.omr { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-top: 8px; }
+.omr button { padding: 4px 0; font-size: .78rem; }
+.omr button.done { background: var(--accent-soft); border-color: var(--accent); }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.no { background: var(--bad-soft); color: var(--bad); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.big { font-size: 2.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--accent); }
+.hidden { display: none !important; }
+select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); }
+@media (max-width: 560px) { .omr { grid-template-columns: repeat(5, 1fr); } .big { font-size: 1.8rem; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const MARKS = ["①", "②", "③", "④"];
+const EXAM_MIN = 150;
+const PER_SUBJECT = 20;
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("nfcf-" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("nfcf-" + k, JSON.stringify(v)); } catch (e) {} },
+};
+const byId = {};
+DATA.forEach(s => s.questions.forEach(q => { byId[q.id] = q; }));
+const app = document.getElementById("app");
+let state = null;
+let timerId = null;
+
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  kids.flat().forEach(c => el.append(c instanceof Node ? c : document.createTextNode(c)));
+  return el;
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function partLabel(p) { return ["", "기본", "심화", "참고자료"][p]; }
+function wrongSet() { return new Set(store.get("wrong", [])); }
+function saveWrong(set) { store.set("wrong", [...set]); }
+function recordAnswers(list) {
+  const w = wrongSet();
+  list.forEach(({ q, picked }) => { if (picked === q.answer) w.delete(q.id); else w.add(q.id); });
+  saveWrong(w);
+}
+
+/* ---------- 홈 ---------- */
+function home() {
+  clearInterval(timerId);
+  state = null;
+  app.replaceChildren();
+  const total = DATA.reduce((n, s) => n + s.questions.length, 0);
+  app.append(
+    h("h1", {}, "산림경영지도원 필기 모의고사"),
+    h("p", { class: "sub" }, `2026 학습모듈 기반 예상문제 ${total}문항 · 기출 아님 · 과목별 40% 과락, 전체 60% 기준으로 채점`),
+  );
+
+  const elective = DATA.filter(s => s.kind === "선택");
+  const examCard = h("div", { class: "card" },
+    h("h2", {}, "실전 모의고사"),
+    h("p", { class: "muted" }, `필수 4과목 + 선택 1과목, 과목당 ${PER_SUBJECT}문항 · 100문항 · ${EXAM_MIN}분`),
+    h("div", { class: "row" }, ...elective.map((s, i) =>
+      h("label", { class: "chip" }, h("input", { type: "radio", name: "elective", value: s.name, checked: i === 0 }), s.name))),
+    h("div", { class: "row", style: "margin-top:10px" },
+      h("label", { class: "chip" }, h("input", { type: "radio", name: "pool", value: "mix", checked: true }), "전체에서 무작위"),
+      h("label", { class: "chip" }, h("input", { type: "radio", name: "pool", value: "1" }), "기본 1~20번 고정")),
+    h("div", { style: "margin-top:14px" }, h("button", { class: "primary", onclick: startExam }, "시작")),
+  );
+
+  const practiceCard = h("div", { class: "card" },
+    h("h2", {}, "과목별 연습"),
+    h("p", { class: "muted" }, "한 문제씩 풀고 바로 정답과 해설 확인"),
+    h("div", { class: "row" },
+      h("select", { id: "pSubject" }, ...DATA.map(s => h("option", { value: s.name }, `${s.name} (${s.kind})`))),
+      h("select", { id: "pPart" },
+        h("option", { value: "0" }, "전체 파트"), h("option", { value: "1" }, "Part 1 기본"),
+        h("option", { value: "2" }, "Part 2 심화"), h("option", { value: "3" }, "Part 3 참고자료")),
+      h("label", { class: "chip" }, h("input", { type: "checkbox", id: "pShuffle", checked: true }), "섞기")),
+    h("div", { style: "margin-top:14px" }, h("button", { class: "primary", onclick: startPractice }, "시작")),
+  );
+
+  const w = wrongSet();
+  const wrongCard = h("div", { class: "card" },
+    h("h2", {}, "오답노트"),
+    h("p", { class: "muted" }, `저장된 오답 ${w.size}문항 · 맞히면 목록에서 빠집니다`),
+    h("div", { class: "row" },
+      h("button", { class: "primary", disabled: w.size === 0, onclick: () => startWrong() }, "오답 다시 풀기"),
+      h("button", { disabled: w.size === 0, onclick: () => { if (confirm("오답노트를 비울까요?")) { saveWrong(new Set()); home(); } } }, "비우기")),
+  );
+
+  app.append(h("div", { class: "grid" }, examCard, practiceCard), wrongCard);
+
+  const hist = store.get("history", []);
+  if (hist.length) {
+    app.append(h("div", { class: "card" }, h("h2", {}, "최근 모의고사 기록"),
+      h("table", {}, h("thead", {}, h("tr", {}, h("th", {}, "날짜"), h("th", {}, "선택"), h("th", {}, "점수"), h("th", {}, "판정"))),
+        h("tbody", {}, ...hist.slice(-8).reverse().map(r => h("tr", {},
+          h("td", {}, r.date), h("td", {}, r.elective), h("td", {}, `${r.avg.toFixed(1)}점`),
+          h("td", {}, h("span", { class: "pill " + (r.pass ? "ok" : "no") }, r.pass ? "통과" : r.fail || "미달"))))))));
+  }
+}
+
+/* ---------- 실전 ---------- */
+function startExam() {
+  const elective = document.querySelector("input[name=elective]:checked").value;
+  const pool = document.querySelector("input[name=pool]:checked").value;
+  const subjects = DATA.filter(s => s.kind === "필수" || s.name === elective);
+  const sections = subjects.map(s => {
+    const qs = pool === "1" ? s.questions.filter(q => q.part === 1) : shuffle(s.questions).slice(0, PER_SUBJECT).sort((a, b) => a.num - b.num);
+    return { name: s.name, qs };
+  });
+  state = { mode: "exam", elective, sections, picks: {}, tab: 0, deadline: Date.now() + EXAM_MIN * 60000 };
+  renderExam();
+  timerId = setInterval(tick, 1000);
+}
+function tick() {
+  const el = document.getElementById("timer");
+  if (!el || !state) return;
+  const left = Math.max(0, state.deadline - Date.now());
+  const m = Math.floor(left / 60000), s = Math.floor(left / 1000) % 60;
+  el.textContent = `${String(m).padStart(3, " ")}:${String(s).padStart(2, "0")}`;
+  el.classList.toggle("low", left < 10 * 60000);
+  if (left === 0) { clearInterval(timerId); alert("시험 시간이 끝났습니다. 자동 채점합니다."); gradeExam(); }
+}
+function renderExam() {
+  app.replaceChildren();
+  const answered = Object.keys(state.picks).length;
+  const totalQ = state.sections.reduce((n, s) => n + s.qs.length, 0);
+  app.append(h("div", { class: "topbar" }, h("div", { class: "inner" },
+    h("div", {}, h("span", { class: "timer", id: "timer" }, ""), h("span", { class: "muted", style: "margin-left:10px" }, `${answered}/${totalQ} 표기`)),
+    h("div", { class: "row" },
+      h("button", { onclick: () => { if (confirm("시험을 그만두고 처음으로 갈까요?")) home(); } }, "나가기"),
+      h("button", { class: "primary", onclick: () => { if (answered < totalQ && !confirm(`${totalQ - answered}문항이 비어 있습니다. 제출할까요?`)) return; gradeExam(); } }, "제출")))));
+
+  app.append(h("div", { class: "tabs" }, ...state.sections.map((s, i) => {
+    const done = s.qs.filter(q => q.id in state.picks).length;
+    return h("button", { class: i === state.tab ? "on" : "", onclick: () => { state.tab = i; renderExam(); window.scrollTo(0, 0); } }, `${s.name} ${done}/${s.qs.length}`);
+  })));
+
+  const sec = state.sections[state.tab];
+  const omr = h("div", { class: "omr" }, ...sec.qs.map((q, i) =>
+    h("button", { class: q.id in state.picks ? "done" : "", onclick: () => document.getElementById("q-" + q.id).scrollIntoView({ behavior: "smooth", block: "center" }) },
+      `${i + 1}${q.id in state.picks ? " " + MARKS[state.picks[q.id]] : ""}`)));
+  app.append(h("div", { class: "card" }, h("div", { class: "muted" }, "답안 표기 현황"), omr));
+
+  app.append(h("div", { class: "card" }, ...sec.qs.map((q, i) => h("div", { class: "q", id: "q-" + q.id },
+    h("div", { class: "stem" }, `${i + 1}. ${q.stem}`, h("span", { class: "tag" }, `${partLabel(q.part)} #${q.num}`)),
+    ...q.options.map((o, k) => h("button", { class: "opt" + (state.picks[q.id] === k ? " sel" : ""),
+      onclick: () => { state.picks[q.id] = k; const y = window.scrollY; renderExam(); window.scrollTo(0, y); } }, `${MARKS[k]} ${o}`))))));
+
+  const nav = h("div", { class: "row" });
+  if (state.tab > 0) nav.append(h("button", { onclick: () => { state.tab--; renderExam(); window.scrollTo(0, 0); } }, "← 이전 과목"));
+  if (state.tab < state.sections.length - 1) nav.append(h("button", { class: "primary", onclick: () => { state.tab++; renderExam(); window.scrollTo(0, 0); } }, "다음 과목 →"));
+  app.append(nav);
+  tick();
+}
+function gradeExam() {
+  clearInterval(timerId);
+  const rows = state.sections.map(s => {
+    const right = s.qs.filter(q => state.picks[q.id] === q.answer).length;
+    return { name: s.name, right, n: s.qs.length, score: right / s.qs.length * 100 };
+  });
+  const avg = rows.reduce((a, r) => a + r.score, 0) / rows.length;
+  const cut = rows.filter(r => r.score < 40);
+  const pass = cut.length === 0 && avg >= 60;
+  recordAnswers(state.sections.flatMap(s => s.qs.map(q => ({ q, picked: state.picks[q.id] }))));
+  const hist = store.get("history", []);
+  hist.push({ date: new Date().toLocaleDateString("ko-KR"), elective: state.elective, avg, pass,
+    fail: cut.length ? `과락 ${cut.map(r => r.name).join("·")}` : avg < 60 ? "평균 미달" : "" });
+  store.set("history", hist.slice(-30));
+  state.result = { rows, avg, pass, cut };
+  state.mode = "review";
+  renderResult(false);
+}
+function renderResult(onlyWrong) {
+  app.replaceChildren();
+  const { rows, avg, pass, cut } = state.result;
+  app.append(h("h1", {}, "채점 결과"),
+    h("div", { class: "card" },
+      h("div", { class: "row", style: "justify-content:space-between" },
+        h("div", {}, h("div", { class: "muted" }, "평균(가산점 제외)"), h("div", { class: "big" }, `${avg.toFixed(1)}점`)),
+        h("span", { class: "pill " + (pass ? "ok" : "no"), style: "font-size:1rem;padding:6px 14px" },
+          pass ? "기준 통과" : cut.length ? `과락: ${cut.map(r => r.name).join(", ")}` : "평균 60점 미달")),
+      h("p", { class: "muted" }, "실제 합격은 지역별 고득점순(선발인원 130%)이라 기준 통과만으로 합격이 보장되지는 않습니다. 목표는 평균 70점 이상."),
+      h("table", {}, h("thead", {}, h("tr", {}, h("th", {}, "과목"), h("th", {}, "정답"), h("th", {}, "점수"), h("th", {}, ""))),
+        h("tbody", {}, ...rows.map(r => h("tr", {}, h("td", {}, r.name), h("td", {}, `${r.right}/${r.n}`),
+          h("td", { style: "min-width:140px" }, h("div", {}, `${r.score.toFixed(0)}점`), h("div", { class: "bar" }, h("span", { style: `width:${r.score}%` }))),
+          h("td", {}, h("span", { class: "pill " + (r.score < 40 ? "no" : r.score < 60 ? "warn" : "ok") }, r.score < 40 ? "과락" : r.score < 60 ? "보강" : "양호"))))))),
+    h("div", { class: "row", style: "margin-bottom:16px" },
+      h("button", { class: onlyWrong ? "" : "primary", onclick: () => renderResult(false) }, "전체 해설"),
+      h("button", { class: onlyWrong ? "primary" : "", onclick: () => renderResult(true) }, "틀린 문제만"),
+      h("button", { onclick: home }, "처음으로")));
+  state.sections.forEach(s => {
+    const qs = s.qs.filter(q => !onlyWrong || state.picks[q.id] !== q.answer);
+    if (!qs.length) return;
+    app.append(h("div", { class: "card" }, h("h2", {}, s.name), ...qs.map(q => reviewBlock(q, state.picks[q.id]))));
+  });
+  window.scrollTo(0, 0);
+}
+function reviewBlock(q, picked) {
+  return h("div", { class: "q" },
+    h("div", { class: "stem" }, `${q.subject} #${q.num}. ${q.stem}`, h("span", { class: "tag" }, partLabel(q.part))),
+    ...q.options.map((o, k) => h("div", { class: "opt" + (k === q.answer ? " right" : k === picked ? " wrong" : "") }, `${MARKS[k]} ${o}`)),
+    h("div", { class: "explain" }, h("strong", {}, `정답 ${MARKS[q.answer]}`), picked == null ? " · 미표기" : picked === q.answer ? " · 맞음" : ` · 내 답 ${MARKS[picked]}`,
+      h("div", {}, q.explain), h("div", { class: "muted" }, `근거: ${q.ref}`)));
+}
+
+/* ---------- 연습 / 오답 ---------- */
+function startPractice() {
+  const name = document.getElementById("pSubject").value;
+  const part = +document.getElementById("pPart").value;
+  let qs = DATA.find(s => s.name === name).questions.filter(q => !part || q.part === part);
+  if (document.getElementById("pShuffle").checked) qs = shuffle(qs);
+  runDrill(qs, `${name}${part ? " · Part " + part : ""}`);
+}
+function startWrong() {
+  const qs = shuffle([...wrongSet()].map(id => byId[id]).filter(Boolean));
+  runDrill(qs, "오답노트");
+}
+function runDrill(qs, title) {
+  clearInterval(timerId);
+  state = { mode: "drill", qs, i: 0, right: 0, title };
+  renderDrill(null);
+}
+function renderDrill(picked) {
+  app.replaceChildren();
+  const { qs, i, title } = state;
+  if (i >= qs.length) {
+    app.append(h("h1", {}, `${title} 완료`),
+      h("div", { class: "card" }, h("div", { class: "big" }, `${state.right}/${qs.length}`),
+        h("p", { class: "muted" }, "틀린 문제는 오답노트에 저장됐습니다."),
+        h("div", { class: "row" }, h("button", { class: "primary", onclick: home }, "처음으로"))));
+    return;
+  }
+  const q = qs[i];
+  app.append(h("div", { class: "topbar" }, h("div", { class: "inner" },
+    h("div", {}, h("strong", {}, title), h("span", { class: "muted", style: "margin-left:10px" }, `${i + 1}/${qs.length} · 정답 ${state.right}`)),
+    h("button", { onclick: home }, "그만하기"))));
+  const card = h("div", { class: "card" });
+  if (picked == null) {
+    card.append(h("div", { class: "stem", style: "font-weight:600;margin-bottom:10px;white-space:pre-line" },
+      `${q.subject} #${q.num}. ${q.stem}`, h("span", { class: "tag muted" }, ` ${partLabel(q.part)}`)),
+      ...q.options.map((o, k) => h("button", { class: "opt", onclick: () => {
+        if (k === q.answer) state.right++;
+        recordAnswers([{ q, picked: k }]);
+        renderDrill(k);
+      } }, `${MARKS[k]} ${o}`)));
+  } else {
+    card.append(reviewBlock(q, picked),
+      h("div", { style: "margin-top:12px" }, h("button", { class: "primary", onclick: () => { state.i++; renderDrill(null); window.scrollTo(0, 0); } }, i + 1 < qs.length ? "다음 문제" : "결과 보기")));
+  }
+  app.append(card);
+}
+
+home();
+</script>
+</body>
+</html>
