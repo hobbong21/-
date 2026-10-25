@@ -40,7 +40,7 @@ def parse(path, subject):
         if len(options) != 4 or num not in answers:
             raise SystemExit(f"{path.name} {num}번: 보기 {len(options)}개 또는 정답 없음")
         ans, expl, ref = answers[num]
-        part = 1 if num <= 20 else 2 if num <= 40 else 3
+        part = 1 if num <= 20 else 2 if num <= 40 else 3 if num <= 50 else 4
         questions.append({
             "id": f"{subject}-{num}", "subject": subject, "num": num, "part": part,
             "stem": stem, "options": options, "answer": ans,
