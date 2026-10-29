@@ -24,6 +24,19 @@ SUBJECTS = [
 MARKS = "①②③④"
 
 
+def explain_lines(quote):
+    """'>' 블록에서 정답·출제 근거를 뺀 해설 줄을 모아 CBT 표시용 텍스트로 만든다('- 항목'은 '· 항목')."""
+    out = []
+    for line in quote:
+        line = line.lstrip(">").strip()
+        if not line or line.startswith("**정답:**") or line.startswith("**출제 근거:**"):
+            continue
+        line = re.sub(r"^-\s+", "· ", line.replace("**해설:**", "").strip())
+        if line:
+            out.append(line)
+    return re.sub(r"\*\*", "", "\n".join(out))
+
+
 def parse(path, subject):
     text = path.read_text(encoding="utf-8")
     blocks = re.split(r"^(?=\*\*\d+\.\*\* )", text, flags=re.M)
@@ -33,17 +46,16 @@ def parse(path, subject):
         if not m:
             continue
         num = int(m.group(1))
-        body = m.group(2).strip()
+        body = re.split(r"^(?:---|## )", m.group(2), flags=re.M)[0].strip()
 
         m_ans = re.search(r">\s*\*\*정답:\*\*\s*([①②③④])", body)
-        m_expl = re.search(r">\s*\*\*해설:\*\*\s*(.*?)\s*(?:\n\s*>|$)", body)
         m_ref = re.search(r">\s*\*\*출제 근거:\*\*\s*(.*?)(?:\n|$)", body)
 
         if not m_ans:
             raise SystemExit(f"{path.name} {num}번: 정답 없음")
 
         ans = MARKS.index(m_ans.group(1))
-        expl = m_expl.group(1).strip() if m_expl else ""
+        expl = explain_lines(l for l in body.splitlines() if l.startswith(">"))
         ref = m_ref.group(1).strip() if m_ref else ""
 
         q_content = re.split(r"\n\s*>", body)[0].strip()
@@ -63,7 +75,7 @@ def parse(path, subject):
             "stem": stem,
             "options": options,
             "answer": ans,
-            "explain": re.sub(r"\*\*", "", expl),
+            "explain": expl,
             "ref": ref,
         })
     return questions
@@ -106,7 +118,7 @@ def parse_public(path):
                 if re.match(r"^(?:[가나다라마]\.|[①②③④])", line.strip()):
                     for g1, g2, txt in PUB_OPT.findall(line.strip()):
                         marks.append("①②③④"[len(options)] if g2 else PUB_MARKS[len(options)] + ".")
-                        options.append(re.sub(r"^\(원문 표기, 라\)\s*", "", txt.strip()))
+                        options.append(txt.strip())
                 else:
                     stem.append(line)
             if len(options) != 4:
@@ -116,9 +128,8 @@ def parse_public(path):
             picks = re.findall(r"[가나다라①②③④]", ans_line.replace("**정답:**", ""))
             idx = [("가나다라".index(c) if c in "가나다라" else "①②③④".index(c)) for c in picks]
             ref = next((l.replace("**출제 근거:**", "").strip() for l in quote if l.startswith("**출제 근거:**")), "")
-            expl = [l.replace("**해설:**", "").strip() for l in quote
-                    if not l.startswith("**정답:**") and not l.startswith("**출제 근거:**") and l.strip()]
-            note = "⚠️ 확인 필요 — " if "⚠️" in ans_line else ""
+            expl = explain_lines(quote)
+            note = "⚠️ 확인 필요\n" if "⚠️" in ans_line else ""
             body = plain("\n".join(stem))
             if lo in shared:
                 body = f"[공통 지문] {shared[lo]}\n\n{body}"
@@ -132,7 +143,7 @@ def parse_public(path):
                 "marks": marks,
                 "answer": idx[0],
                 "accept": sorted(set(idx)),
-                "explain": note + re.sub(r"\*\*", "", "\n".join(expl)),
+                "explain": note + expl,
                 "ref": ref,
             })
         data.append({"name": name, "questions": questions})
